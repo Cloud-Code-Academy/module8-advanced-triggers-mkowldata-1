@@ -59,7 +59,11 @@ public with sharing class OpportunityHelper {
             accountIds.add(opp.AccountId);
         }
         
-        Map<Id, Contact> contacts = new Map<Id, Contact>([SELECT Id, FirstName, AccountId FROM Contact WHERE AccountId IN :accountIds AND Title = 'CEO' ORDER BY FirstName ASC]);
+        Map<Id, Contact> contacts = new Map<Id, Contact>([SELECT Id, FirstName, AccountId 
+                                                          FROM Contact 
+                                                          WHERE AccountId IN :accountIds AND Title = 'CEO' 
+                                                          WITH SECURITY_ENFORCED
+                                                          ORDER BY FirstName ASC]);
         Map<Id, Contact> accountIdToContact = new Map<Id, Contact>();
 
         for (Contact cont : contacts.values()) {
@@ -130,15 +134,17 @@ public with sharing class OpportunityHelper {
             ownerIds.add(opp.OwnerId);
         }
         // get a list of Users
-        List<User> userList = [SELECT Id, Email FROM User WHERE Id IN:ownerIds];
+        List<User> userList = [SELECT Id, Email 
+                               FROM User 
+                               WHERE Id IN:ownerIds WITH SECURITY_ENFORCED];
         // create a Map of user Id to User
-        Map<Id, User> IdUserMap = new Map<Id, User>();
+        Map<Id, User> idUserMap = new Map<Id, User>();
         for (User users : userList) {
-            IdUserMap.put(users.Id, users);
+            idUserMap.put(users.Id, users);
         }
         for (Opportunity opp : opportunities) {
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            String ownerEmail = IdUserMap.get(opp.OwnerId).Email;
+            String ownerEmail = idUserMap.get(opp.OwnerId).Email;
             List<String> toAddresses = new List<String> {ownerEmail};
             mail.setToAddresses(toAddresses);
             mail.setSubject('Opportunity Deleted : ' + opp.Name);
@@ -173,7 +179,9 @@ public with sharing class OpportunityHelper {
             accountIds.add(opp.AccountId);
         }
         //now that we have a set of accountIds lets grab the contacts associated with the AccountIds
-        List<Contact> primaryContacts = [SELECT Id, Name, Title, AccountId FROM Contact WHERE AccountId IN : accountIds AND Title = 'VP Sales'];
+        List<Contact> primaryContacts = [SELECT Id, Name, Title, AccountId FROM Contact 
+                                        WHERE AccountId IN : accountIds AND Title = 'VP Sales'
+                                        WITH SECURITY_ENFORCED];
         //Add the AccountId and Contact to a map
         Map<Id, Contact> accountIdsToContact = new Map<Id, Contact>();
 
